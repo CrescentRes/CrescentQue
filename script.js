@@ -43,9 +43,6 @@ async function getNextQueueNumber() {
   }
 }
 
-// Call this once when setting up your system
-initializeCounter();
-
 document.addEventListener("DOMContentLoaded", function () {
   const queueForm = document.getElementById("queueForm");
   const queueResult = document.getElementById("queueResult");
