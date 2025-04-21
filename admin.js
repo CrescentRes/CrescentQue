@@ -143,6 +143,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
   debugFirestoreConnection();
 
+  // Mobile connection monitor
+  function monitorConnection() {
+    const connectionInfo = document.createElement("div");
+    connectionInfo.style.position = "fixed";
+    connectionInfo.style.bottom = "10px";
+    connectionInfo.style.left = "10px";
+    connectionInfo.style.backgroundColor = "rgba(0,0,0,0.7)";
+    connectionInfo.style.color = "white";
+    connectionInfo.style.padding = "5px";
+    connectionInfo.style.borderRadius = "5px";
+    connectionInfo.style.zIndex = "10000";
+    document.body.appendChild(connectionInfo);
+
+    function updateConnectionStatus() {
+      const online = navigator.onLine ? "Online" : "Offline";
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      connectionInfo.textContent = `${online} | ${width}×${height} | ${
+        isMobile() ? "Mobile" : "Desktop"
+      }`;
+    }
+
+    window.addEventListener("online", updateConnectionStatus);
+    window.addEventListener("offline", updateConnectionStatus);
+    window.addEventListener("resize", updateConnectionStatus);
+    updateConnectionStatus();
+  }
+
+  monitorConnection();
+
   async function completeCustomer(id) {
     try {
       await db.collection("queue").doc(id).update({

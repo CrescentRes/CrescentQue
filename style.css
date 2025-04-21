@@ -42,3 +42,49 @@ body {
       overflow-x: auto;
   }
 }
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  body {
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+  }
+  
+  .card {
+      margin-top: 1rem !important;
+      border-radius: 0 !important;
+  }
+  
+  #queueForm input, #queueForm button {
+      font-size: 16px !important; /* Prevent iOS zoom */
+      min-height: 44px !important; /* Better touch target */
+  }
+  
+  #queueNumberDisplay {
+      font-size: 3.5rem !important;
+  }
+  
+  #queueResult {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      margin: 0;
+      border-radius: 0 !important;
+      z-index: 1000;
+      overflow-y: auto;
+  }
+  
+  #newCustomerBtn {
+      padding: 12px 24px;
+      font-size: 18px;
+  }
+}
+
+/* Prevent input zoom on iOS */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select:focus, textarea:focus, input:focus {
+      font-size: 16px;
+  }
+}
