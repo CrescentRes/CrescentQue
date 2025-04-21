@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card mt-5">
+                    <div class="card-header bg-danger text-white">
+                        <h2 class="text-center">Queue Admin Dashboard</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <h4>Current Queue</h4>
+                            <button id="refreshBtn" class="btn btn-sm btn-primary">Refresh</button>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Queue #</th>
+                                    <th>Name</th>
+                                    <th>Party Size</th>
+                                    <th>Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueTable">
+                                <!-- Queue items will be inserted here -->
+                            </tbody>
+                        </table>
+                        <div class="d-flex justify-content-between mt-3">
+                            <button id="clearAllBtn" class="btn btn-danger">Clear All</button>
+                            <div>
+                                <span class="badge bg-primary">Total in Queue: <span id="totalCount">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
