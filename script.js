@@ -5,31 +5,44 @@ const firebaseConfig = {
   projectId: "crescent-queue-system",
   storageBucket: "crescent-queue-system.appspot.com",
   messagingSenderId: "326862097681",
-  appId: "1:326862097681:web:e0205177054de6f90010b0"
+  appId: "1:326862097681:web:e0205177054de6f90010b0",
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Initialize queue counter (run once)
-async function initializeCounter() {
+async function getNextQueueNumber() {
+  const counterRef = db.collection("metadata").doc("queueCounter");
+
   try {
-    const counterRef = db.collection('metadata').doc('queueCounter');
-    const doc = await counterRef.get();
-    
-    if (!doc.exists) {
-      // Set initial counter to highest existing queue number or 0
-      const snapshot = await db.collection('queue')
-        .orderBy('queueNumber', 'desc')
-        .limit(1)
-        .get();
-      
-      const lastNumber = snapshot.empty ? 0 : snapshot.docs[0].data().queueNumber;
-      await counterRef.set({ lastNumber: lastNumber });
-      console.log("Counter initialized to:", lastNumber);
-    }
+    return await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(counterRef);
+
+      // Initialize counter if it doesn't exist
+      if (!doc.exists) {
+        // Find highest existing queue number
+        const snapshot = await db
+          .collection("queue")
+          .orderBy("queueNumber", "desc")
+          .limit(1)
+          .get();
+
+        const lastNumber = snapshot.empty
+          ? 0
+          : snapshot.docs[0].data().queueNumber;
+        transaction.set(counterRef, { lastNumber: lastNumber });
+        return lastNumber + 1;
+      }
+
+      // Normal increment
+      const lastNumber = doc.data().lastNumber;
+      const nextNumber = lastNumber + 1;
+      transaction.update(counterRef, { lastNumber: nextNumber });
+      return nextNumber;
+    });
   } catch (error) {
-    console.error("Counter initialization error:", error);
+    console.error("Transaction error:", error);
+    throw error;
   }
 }
 
@@ -46,41 +59,35 @@ document.addEventListener("DOMContentLoaded", function () {
   queueForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const name = document.getElementById("customerName").value;
+    const name = document.getElementById("customerName").value.trim();
     const partySize = document.getElementById("partySize").value;
     const submitBtn = queueForm.querySelector('button[type="submit"]');
 
     try {
       // Show loading state
       submitBtn.disabled = true;
-      submitBtn.innerHTML = 
+      submitBtn.innerHTML =
         '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
 
-      // Get next queue number (transactionally)
-      const counterRef = db.collection('metadata').doc('queueCounter');
-      const newNumber = await db.runTransaction(async (transaction) => {
-        const doc = await transaction.get(counterRef);
-        const lastNumber = doc.exists ? doc.data().lastNumber : 0;
-        const nextNumber = lastNumber + 1;
-        transaction.set(counterRef, { lastNumber: nextNumber }, { merge: true });
-        return nextNumber;
-      });
+      // Get next queue number
+      const queueNumber = await getNextQueueNumber();
 
       // Add customer to queue
       await db.collection("queue").add({
-        queueNumber: newNumber,
+        queueNumber: queueNumber,
         name: name,
         partySize: parseInt(partySize),
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        status: "waiting"
+        status: "waiting",
       });
 
       // Display results
-      queueNumberDisplay.textContent = `Q-${newNumber.toString().padStart(3, '0')}`;
+      queueNumberDisplay.textContent = `Q-${queueNumber
+        .toString()
+        .padStart(3, "0")}`;
       customerInfo.textContent = `Name: ${name} (Party of ${partySize})`;
       queueForm.reset();
       queueResult.classList.remove("d-none");
-
     } catch (error) {
       console.error("Error:", error);
       alert("Error getting queue number. Please try again.");
