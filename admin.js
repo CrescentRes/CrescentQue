@@ -1,25 +1,46 @@
+// Replace your entire admin.js with this code:
+
 // Initialize Firebase
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCwv0xOOliAnlXivDEVnndaVXPf91C5fA8",
+  authDomain: "crescent-queue-system.firebaseapp.com",
+  projectId: "crescent-queue-system",
+  storageBucket: "crescent-queue-system.firebasestorage.app",
+  messagingSenderId: "326862097681",
+  appId: "1:326862097681:web:e0205177054de6f90010b0",
+  measurementId: "G-ZGT8Y8V3ZC"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// Debugging check
+console.log("Firebase initialized:", firebase.app().name); 
 
 document.addEventListener('DOMContentLoaded', function() {
     const queueTable = document.getElementById('queueTable');
     const totalCount = document.getElementById('totalCount');
     
-    // Real-time listener for queue changes
+    // Debug element
+    const debugDiv = document.createElement('div');
+    debugDiv.style.position = 'fixed';
+    debugDiv.style.bottom = '10px';
+    debugDiv.style.right = '10px';
+    debugDiv.style.backgroundColor = '#f8f9fa';
+    debugDiv.style.padding = '10px';
+    debugDiv.style.border = '1px solid #ddd';
+    debugDiv.style.borderRadius = '5px';
+    debugDiv.style.zIndex = '1000';
+    document.body.appendChild(debugDiv);
+    
+    // Real-time listener with error handling
     let unsubscribe = db.collection('queue')
-        .orderBy('queueNumber', 'asc')
+        .orderBy('timestamp', 'asc')
         .onSnapshot(
             (snapshot) => {
+                debugDiv.innerHTML = `Last update: ${new Date().toLocaleTimeString()}<br>Documents: ${snapshot.size}`;
+                
                 queueTable.innerHTML = '';
                 let waitingCount = 0;
                 
@@ -28,18 +49,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.status !== 'completed') waitingCount++;
                     
                     const row = document.createElement('tr');
-                    row.className = data.status === 'completed' ? 'table-secondary' : '';
                     row.innerHTML = `
-                        <td>Q-${data.queueNumber.toString().padStart(3, '0')}</td>
-                        <td>${data.name}</td>
-                        <td>${data.partySize}</td>
+                        <td>Q-${doc.id.substring(0, 6).toUpperCase()}</td>
+                        <td>${data.name || 'N/A'}</td>
+                        <td>${data.partySize || 'N/A'}</td>
                         <td>${formatTime(data.timestamp?.toDate())}</td>
                         <td><span class="badge ${getStatusClass(data.status)}">${data.status || 'waiting'}</span></td>
                         <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-success complete-btn" data-id="${doc.id}">Complete</button>
-                                <button class="btn btn-danger remove-btn" data-id="${doc.id}">Remove</button>
-                            </div>
+                            <button class="btn btn-sm btn-success complete-btn" data-id="${doc.id}">Complete</button>
+                            <button class="btn btn-sm btn-danger remove-btn" data-id="${doc.id}">Remove</button>
                         </td>
                     `;
                     queueTable.appendChild(row);
@@ -47,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 totalCount.textContent = waitingCount;
                 
-                // Add event listeners to buttons
+                // Add event listeners to new buttons
                 document.querySelectorAll('.complete-btn').forEach(btn => {
                     btn.addEventListener('click', () => completeCustomer(btn.dataset.id));
                 });
@@ -58,23 +76,14 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             (error) => {
                 console.error("Firestore error:", error);
-                alert("Error loading queue data");
+                debugDiv.innerHTML = `Error: ${error.message}`;
             }
         );
-
+    
     // Helper functions
     function formatTime(date) {
         if (!date) return 'N/A';
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.round(diffMs / 60000);
-        
-        if (diffMins < 1) return 'Just arrived';
-        if (diffMins < 60) return `${diffMins} min ago`;
-        
-        const diffHours = Math.floor(diffMins / 60);
-        const remainingMins = diffMins % 60;
-        return `${diffHours}h ${remainingMins}m ago`;
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     
     function getStatusClass(status) {
@@ -104,6 +113,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+    // Clear buttons functionality
+    document.getElementById('clearCompletedBtn')?.addEventListener('click', clearCompleted);
+    document.getElementById('clearAllBtn')?.addEventListener('click', clearAll);
     
     async function clearCompleted() {
         if (confirm('Clear all completed customers?')) {
@@ -135,32 +148,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
-    // Initialize buttons
-    document.getElementById('clearCompletedBtn').addEventListener('click', clearCompleted);
-    document.getElementById('clearAllBtn').addEventListener('click', clearAll);
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-        // Real-time listener automatically refreshes
-        alert('Queue refreshed');
-    });
-    
-    // Initialize counter if not exists
-    initializeCounter();
 });
-
-async function initializeCounter() {
-    const counterRef = db.collection('metadata').doc('queueCounter');
-    const doc = await counterRef.get();
-    
-    if (!doc.exists) {
-        // Find the highest existing queue number
-        const snapshot = await db.collection('queue')
-            .orderBy('queueNumber', 'desc')
-            .limit(1)
-            .get();
-        
-        const lastNumber = snapshot.empty ? 0 : snapshot.docs[0].data().queueNumber;
-        await counterRef.set({ lastNumber: lastNumber });
-        console.log("Counter initialized to:", lastNumber);
-    }
-}

@@ -21,13 +21,14 @@ body {
   animation: fadeIn 0.5s;
 }
 
-.table-responsive {
-  overflow-x: auto;
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Admin specific styles */
+.complete-btn {
+  margin-right: 5px;
 }
 
 @media (max-width: 576px) {
@@ -35,15 +36,9 @@ body {
       font-size: 3rem;
   }
   
-  .btn-group-sm .btn {
-      padding: 0.25rem 0.5rem;
-      font-size: 0.875rem;
+  .table-responsive {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
   }
 }
-
-/* Status badges */
-.bg-success { background-color: #198754 !important; }
-.bg-primary { background-color: #0d6efd !important; }
-.bg-secondary { background-color: #6c757d !important; }
-.bg-danger { background-color: #dc3545 !important; }
-.bg-warning { background-color: #ffc107 !important; }
