@@ -21,6 +21,16 @@ body {
   animation: fadeIn 0.5s;
 }
 
+/* Hide the debug element but keep it in DOM */
+#firebase-debug {
+  display: none !important;  /* Makes it invisible */
+  visibility: hidden !important; /* Double protection */
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }

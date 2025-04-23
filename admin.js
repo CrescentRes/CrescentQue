@@ -40,9 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .orderBy("timestamp", "asc")
     .onSnapshot(
       (snapshot) => {
-        debugDiv.innerHTML = `Last update: ${new Date().toLocaleTimeString()}<br>Documents: ${
-          snapshot.size
-        }`;
+        debugDiv.innerHTML = ``;
 
         queueTable.innerHTML = "";
         let waitingCount = 0;
@@ -88,6 +86,28 @@ document.addEventListener("DOMContentLoaded", function () {
         debugDiv.innerHTML = `Error: ${error.message}`;
       }
     );
+
+  // Ensure debug element is hidden on initialization
+  document.addEventListener("DOMContentLoaded", function () {
+    const debugEl = document.getElementById("firebase-debug");
+    if (debugEl) {
+      debugEl.style.display = "none";
+
+      // Your existing debug code can remain
+      db.collection("queue")
+        .limit(1)
+        .get()
+        .then((snap) => {
+          debugEl.textContent = `Connected: ${snap.size} docs`;
+          // Message will be there if you need to inspect it
+        })
+        .catch((err) => {
+          debugEl.textContent = `Error: ${err.message}`;
+          debugEl.style.display = "block"; // Only show on error
+          debugEl.classList.add("alert-danger");
+        });
+    }
+  });
 
   // Helper functions
   function formatTime(date) {
@@ -233,4 +253,26 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   }
+
+  // Automatic date-based reset (no server needed)
+  async function checkDailyReset() {
+    const today = new Date().toDateString();
+    const lastReset = localStorage.getItem("lastResetDate");
+
+    if (lastReset !== today) {
+      try {
+        await db
+          .collection("metadata")
+          .doc("queueCounter")
+          .set({ lastNumber: 0 });
+        localStorage.setItem("lastResetDate", today);
+        console.log("Daily counter reset");
+      } catch (error) {
+        console.error("Reset failed:", error);
+      }
+    }
+  }
+
+  // Call this when admin page loads
+  checkDailyReset();
 });
