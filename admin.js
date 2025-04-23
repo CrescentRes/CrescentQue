@@ -153,12 +153,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Display debug info
     const debugEl = document.getElementById("firebase-debug") || document.body;
-    debugEl.innerHTML = `
-    <div style="position:fixed;bottom:10px;right:10px;background:#f8f9fa;padding:10px;border:1px solid #ddd;border-radius:5px;z-index:1000">
-      <h5>Firestore Debug</h5>
-      <pre>${JSON.stringify(debugInfo, null, 2)}</pre>
-    </div>
-  `;
+    debugEl.innerHTML = ``;
   }
 
   debugFirestoreConnection();
