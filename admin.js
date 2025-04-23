@@ -142,10 +142,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function getStatusClass(status) {
     return status === "completed"
-      ? "bg-secondary"
+      ? "bg-success"
       : status === "serving"
       ? "bg-primary"
-      : "bg-success";
+      : "bg-danger";
   }
 
   function isMobile() {
