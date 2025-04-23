@@ -45,28 +45,29 @@ document.addEventListener("DOMContentLoaded", function () {
         queueTable.innerHTML = "";
         let waitingCount = 0;
 
+        // In your admin.js, find where you create table rows and change:
         snapshot.forEach((doc) => {
           const data = doc.data();
-          if (data.status !== "completed") waitingCount++;
-
           const row = document.createElement("tr");
           row.innerHTML = `
-                        <td>Q-${doc.id.substring(0, 6).toUpperCase()}</td>
-                        <td>${data.name || "N/A"}</td>
-                        <td>${data.partySize || "N/A"}</td>
-                        <td>${formatTime(data.timestamp?.toDate())}</td>
-                        <td><span class="badge ${getStatusClass(
-                          data.status
-                        )}">${data.status || "waiting"}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-success complete-btn" data-id="${
-                              doc.id
-                            }">Complete</button>
-                            <button class="btn btn-sm btn-danger remove-btn" data-id="${
-                              doc.id
-                            }">Remove</button>
-                        </td>
-                    `;
+      <td>Q-${data.queueNumber
+        .toString()
+        .padStart(3, "0")}</td> <!-- Just change this line -->
+      <td>${data.name || "N/A"}</td>
+      <td>${data.partySize || "N/A"}</td>
+      <td>${formatTime(data.timestamp?.toDate())}</td>
+      <td><span class="badge ${getStatusClass(data.status)}">${
+            data.status || "waiting"
+          }</span></td>
+      <td>
+          <button class="btn btn-sm btn-success complete-btn" data-id="${
+            doc.id
+          }">Complete</button>
+          <button class="btn btn-sm btn-danger remove-btn" data-id="${
+            doc.id
+          }">Remove</button>
+      </td>
+  `;
           queueTable.appendChild(row);
         });
 
@@ -150,7 +151,6 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (error) {
       debugInfo.error = error.message;
     }
-
   }
 
   debugFirestoreConnection();
