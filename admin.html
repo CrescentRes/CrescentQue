@@ -16,8 +16,8 @@
       <div class="row justify-content-center">
         <div class="col-md-10">
           <div class="card mt-5">
-            <div class="card-header bg-danger text-white">
-              <h2 class="text-center">Queue Admin Dashboard</h2>
+            <div class="card-header text-white" style="background-color: #E30016;">
+              <h2 class="text-center" style="font-weight: bold;">Queue Admin Dashboard</h2>
             </div>
             <div class="card-body">
               <div class="d-flex justify-content-between mb-3">
@@ -26,9 +26,13 @@
                   <button id="refreshBtn" class="btn btn-sm btn-primary me-2">
                     Refresh
                   </button>
-                  <span class="badge bg-primary"
-                    >Total: <span id="totalCount">0</span></span
-                  >
+                  <button id="clearCompletedBtn" class="btn btn-sm btn-warning me-2">
+                    Clear Completed
+                  </button>
+                  <button id="clearAllBtn" class="btn btn-sm btn-danger me-2">
+                    Clear All
+                  </button>
+                  <span class="badge bg-primary">Total: <span id="totalCount"></span></span>
                 </div>
               </div>
               <div class="table-responsive">
@@ -58,25 +62,6 @@
       id="firebase-debug"
       class="alert alert-info position-fixed bottom-0 end-0 m-3 d-none"
     ></div>
-
-    <script>
-      // Add this right after Firebase initialization
-      window.addEventListener("load", () => {
-        const debugEl = document.getElementById("firebase-debug");
-
-        // Test Firestore connection
-        db.collection("queue")
-          .limit(1)
-          .get()
-          .then((snap) => {
-            debugEl.innerHTML = `Firestore connected. ${snap.size} documents found.`;
-          })
-          .catch((err) => {
-            debugEl.innerHTML = `Firestore error: ${err.message}`;
-            debugEl.classList.add("alert-danger");
-          });
-      });
-    </script>
 
     <!-- Firebase scripts -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>

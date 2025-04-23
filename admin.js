@@ -1,5 +1,3 @@
-
-
 // Initialize Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyCwv0xOOliAnlXivDEVnndaVXPf91C5fA8",
@@ -11,8 +9,6 @@ const firebaseConfig = {
   measurementId: "G-ZGT8Y8V3ZC",
 };
 
-
-
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -23,6 +19,9 @@ console.log("Firebase initialized:", firebase.app().name);
 document.addEventListener("DOMContentLoaded", function () {
   const queueTable = document.getElementById("queueTable");
   const totalCount = document.getElementById("totalCount");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const clearCompletedBtn = document.getElementById("clearCompletedBtn");
+  const clearAllBtn = document.getElementById("clearAllBtn");
 
   // Debug element
   const debugDiv = document.createElement("div");
@@ -34,83 +33,106 @@ document.addEventListener("DOMContentLoaded", function () {
   debugDiv.style.border = "1px solid #ddd";
   debugDiv.style.borderRadius = "5px";
   debugDiv.style.zIndex = "1000";
+  debugDiv.style.display = "none"; // Hide by default
   document.body.appendChild(debugDiv);
 
   // Real-time listener with error handling
-  let unsubscribe = db
-    .collection("queue")
-    .orderBy("timestamp", "asc")
-    .onSnapshot(
-      (snapshot) => {
-        debugDiv.innerHTML = ``;
+  function setupQueueListener() {
+    return db
+      .collection("queue")
+      .orderBy("timestamp", "asc")
+      .onSnapshot(
+        (snapshot) => {
+          debugDiv.innerHTML = `Connected to Firestore`;
 
-        queueTable.innerHTML = "";
-        let waitingCount = 0;
+          queueTable.innerHTML = "";
+          let waitingCount = 0;
 
-        // In your admin.js, find where you create table rows and change:
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const row = document.createElement("tr");
-          row.innerHTML = `
-      <td>Q-${data.queueNumber
-        .toString()
-        .padStart(3, "0")}</td> <!-- Just change this line -->
-      <td>${data.name || "N/A"}</td>
-      <td>${data.partySize || "N/A"}</td>
-      <td>${formatTime(data.timestamp?.toDate())}</td>
-      <td><span class="badge ${getStatusClass(data.status)}">${
-            data.status || "waiting"
-          }</span></td>
-      <td>
-          <button class="btn btn-sm btn-success complete-btn" data-id="${
-            doc.id
-          }">Complete</button>
-          <button class="btn btn-sm btn-danger remove-btn" data-id="${
-            doc.id
-          }">Remove</button>
-      </td>
-  `;
-          queueTable.appendChild(row);
-        });
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // Increment waitingCount for all items
+            waitingCount++;
+            
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>Q-${data.queueNumber.toString().padStart(3, "0")}</td>
+              <td>${data.name || "N/A"}</td>
+              <td>${data.partySize || "N/A"}</td>
+              <td>${formatTime(data.timestamp?.toDate())}</td>
+              <td><span class="badge ${getStatusClass(data.status)}">${
+              data.status || "waiting"
+            }</span></td>
+              <td>
+                <button class="btn btn-sm btn-success complete-btn" data-id="${doc.id}">Complete</button>
+                <button class="btn btn-sm btn-danger remove-btn" data-id="${doc.id}">Remove</button>
+              </td>
+            `;
+            queueTable.appendChild(row);
+          });
 
-        totalCount.textContent = waitingCount;
+          // Update the total count display
+          totalCount.textContent = waitingCount;
 
-        // Add event listeners to new buttons
-        document.querySelectorAll(".complete-btn").forEach((btn) => {
-          btn.addEventListener("click", () => completeCustomer(btn.dataset.id));
-        });
+          // Add event listeners to new buttons
+          document.querySelectorAll(".complete-btn").forEach((btn) => {
+            btn.addEventListener("click", () => completeCustomer(btn.dataset.id));
+          });
 
-        document.querySelectorAll(".remove-btn").forEach((btn) => {
-          btn.addEventListener("click", () => removeCustomer(btn.dataset.id));
-        });
-      },
-      (error) => {
-        console.error("Firestore error:", error);
-        debugDiv.innerHTML = `Error: ${error.message}`;
+          document.querySelectorAll(".remove-btn").forEach((btn) => {
+            btn.addEventListener("click", () => removeCustomer(btn.dataset.id));
+          });
+        },
+        (error) => {
+          console.error("Firestore error:", error);
+          debugDiv.innerHTML = `Error: ${error.message}`;
+          debugDiv.style.display = "block"; // Show on error
+        }
+      );
+  }
+
+  // Initialize listener
+  let unsubscribe = setupQueueListener();
+
+  // Add refresh button functionality
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", () => {
+      // Unsubscribe and resubscribe to refresh
+      if (unsubscribe) {
+        unsubscribe();
       }
-    );
+      unsubscribe = setupQueueListener();
+    });
+  }
+
+  // Add clear buttons functionality
+  if (clearCompletedBtn) {
+    clearCompletedBtn.addEventListener("click", clearCompleted);
+  }
+  
+  if (clearAllBtn) {
+    clearAllBtn.addEventListener("click", clearAll);
+  }
 
   // Ensure debug element is hidden on initialization
-  document.addEventListener("DOMContentLoaded", function () {
-    const debugEl = document.getElementById("firebase-debug");
-    if (debugEl) {
-      debugEl.style.display = "none";
+  const debugEl = document.getElementById("firebase-debug");
+  if (debugEl) {
+    debugEl.style.display = "none";
 
-      // Your existing debug code can remain
-      db.collection("queue")
-        .limit(1)
-        .get()
-        .then((snap) => {
-          debugEl.textContent = `Connected: ${snap.size} docs`;
-          // Message will be there if you need to inspect it
-        })
-        .catch((err) => {
-          debugEl.textContent = `Error: ${err.message}`;
-          debugEl.style.display = "block"; // Only show on error
-          debugEl.classList.add("alert-danger");
-        });
-    }
-  });
+    // Your existing debug code can remain
+    db.collection("queue")
+      .limit(1)
+      .get()
+      .then((snap) => {
+        debugEl.textContent = `Connected: ${snap.size} docs`;
+        // Message will be there if you need to inspect it
+      })
+      .catch((err) => {
+        debugEl.textContent = `Error: ${err.message}`;
+        debugEl.style.display = "block"; // Only show on error
+        debugEl.classList.add("alert-danger");
+      });
+  }
 
   // Helper functions
   function formatTime(date) {
@@ -126,66 +148,22 @@ document.addEventListener("DOMContentLoaded", function () {
       : "bg-success";
   }
 
+  function isMobile() {
+    return window.innerWidth < 768;
+  }
+
   // Add this after Firebase initialization
   async function debugFirestoreConnection() {
-    const debugInfo = {
-      appName: firebase.app().name,
-      projectId: firebase.app().options.projectId,
-      databaseUrl: firebase.app().options.databaseURL,
-      timestamp: new Date().toISOString(),
-    };
-
     try {
       // Test with a direct query
       const snapshot = await db.collection("queue").get();
-
-      debugInfo.documentCount = snapshot.size;
-      debugInfo.firstDoc = snapshot.empty ? null : snapshot.docs[0].data();
-
-      // List all collections (requires Firebase Admin SDK or special rules)
-      // This might fail due to security rules
-      try {
-        const collections = await db.listCollections();
-        debugInfo.collections = collections.map((col) => col.id);
-      } catch (e) {
-        debugInfo.collectionsError = e.message;
-      }
+      console.log(`Connected to Firestore: ${snapshot.size} documents found.`);
     } catch (error) {
-      debugInfo.error = error.message;
+      console.error("Firestore connection error:", error);
     }
   }
 
   debugFirestoreConnection();
-
-  // Mobile connection monitor
-  function monitorConnection() {
-    const connectionInfo = document.createElement("div");
-    connectionInfo.style.position = "fixed";
-    connectionInfo.style.bottom = "10px";
-    connectionInfo.style.left = "10px";
-    connectionInfo.style.backgroundColor = "rgba(0,0,0,0.7)";
-    connectionInfo.style.color = "white";
-    connectionInfo.style.padding = "5px";
-    connectionInfo.style.borderRadius = "5px";
-    connectionInfo.style.zIndex = "10000";
-    document.body.appendChild(connectionInfo);
-
-    function updateConnectionStatus() {
-      const online = navigator.onLine ? "Online" : "Offline";
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      connectionInfo.textContent = `${online} | ${width}×${height} | ${
-        isMobile() ? "Mobile" : "Desktop"
-      }`;
-    }
-
-    window.addEventListener("online", updateConnectionStatus);
-    window.addEventListener("offline", updateConnectionStatus);
-    window.addEventListener("resize", updateConnectionStatus);
-    updateConnectionStatus();
-  }
-
-  monitorConnection();
 
   async function completeCustomer(id) {
     try {
@@ -210,40 +188,61 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Clear buttons functionality
-  document
-    .getElementById("clearCompletedBtn")
-    ?.addEventListener("click", clearCompleted);
-  document.getElementById("clearAllBtn")?.addEventListener("click", clearAll);
-
   async function clearCompleted() {
-    if (confirm("Clear all completed customers?")) {
+    if (confirm("Are you sure you want to clear all completed customers from the queue?")) {
       try {
-        const snapshot = await db
+        // Get all completed items
+        const completedSnapshot = await db
           .collection("queue")
           .where("status", "==", "completed")
           .get();
-
+        
+        if (completedSnapshot.empty) {
+          alert("No completed customers to clear.");
+          return;
+        }
+        
+        // Use a batch for efficient multiple deletes
         const batch = db.batch();
-        snapshot.forEach((doc) => batch.delete(doc.ref));
+        completedSnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        
+        // Commit the batch
         await batch.commit();
+        console.log(`Cleared ${completedSnapshot.size} completed customers`);
+        alert(`Successfully cleared ${completedSnapshot.size} completed customers`);
       } catch (error) {
-        console.error("Error clearing completed:", error);
-        alert("Error clearing completed customers");
+        console.error("Error clearing completed customers:", error);
+        alert("Error clearing completed customers: " + error.message);
       }
     }
   }
 
   async function clearAll() {
-    if (confirm("Clear ALL customers from queue?")) {
+    if (confirm("WARNING: Are you sure you want to clear ALL customers from the queue? This cannot be undone.")) {
       try {
+        // Get all queue items
         const snapshot = await db.collection("queue").get();
+        
+        if (snapshot.empty) {
+          alert("Queue is already empty.");
+          return;
+        }
+        
+        // Use a batch for efficient multiple deletes
         const batch = db.batch();
-        snapshot.forEach((doc) => batch.delete(doc.ref));
+        snapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+        
+        // Commit the batch
         await batch.commit();
+        console.log(`Cleared entire queue (${snapshot.size} customers)`);
+        alert(`Successfully cleared entire queue (${snapshot.size} customers)`);
       } catch (error) {
-        console.error("Error clearing all:", error);
-        alert("Error clearing queue");
+        console.error("Error clearing all customers:", error);
+        alert("Error clearing queue: " + error.message);
       }
     }
   }
