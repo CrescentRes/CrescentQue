@@ -151,9 +151,6 @@ document.addEventListener("DOMContentLoaded", function () {
       debugInfo.error = error.message;
     }
 
-    // Display debug info
-    const debugEl = document.getElementById("firebase-debug") || document.body;
-    debugEl.innerHTML = ``;
   }
 
   debugFirestoreConnection();
