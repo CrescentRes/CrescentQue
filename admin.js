@@ -1,30 +1,4 @@
 
-// Password Protection
-const ADMIN_PASSWORD = "Test"; // Change this to your desired password
-const passwordModal = document.getElementById('passwordModal');
-const mainContent = document.querySelector('.container.main-content');
-
-// Check if already authenticated
-if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
-  // Show password modal
-  document.getElementById('loginBtn').addEventListener('click', function() {
-    const password = document.getElementById('adminPassword').value;
-    const errorElement = document.getElementById('passwordError');
-    
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('adminAuthenticated', 'true');
-      passwordModal.classList.remove('show', 'd-block');
-      passwordModal.classList.add('d-none');
-      mainContent.style.display = 'block';
-    } else {
-      errorElement.classList.remove('d-none');
-    }
-  });
-} else {
-  // Already authenticated
-  passwordModal.classList.add('d-none');
-  mainContent.style.display = 'block';
-}
 
 // Initialize Firebase
 const firebaseConfig = {

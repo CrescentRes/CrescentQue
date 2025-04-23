@@ -11,53 +11,7 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- Password Protection Modal -->
-    <div
-      id="passwordModal"
-      class="modal fade show d-block"
-      tabindex="-1"
-      data-bs-backdrop="static"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Admin Login</h5>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="adminPassword" class="form-label">Password:</label>
-              <input
-                type="password"
-                class="form-control"
-                id="adminPassword"
-                placeholder="Enter password"
-              />
-              <div id="passwordError" class="text-danger mt-2 d-none">
-                Incorrect password
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button id="loginBtn" class="btn btn-primary">Enter</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <style>
-      /* Make sure modal appears on top */
-      .modal.show {
-        background: rgba(0, 0, 0, 0.5);
-      }
-
-      /* Hide main content initially */
-      .container.main-content {
-        display: none;
-      }
-    </style>
-
-    <div class="container main-content"></div>
-
+    
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-md-10">
@@ -104,8 +58,6 @@
       id="firebase-debug"
       class="alert alert-info position-fixed bottom-0 end-0 m-3 d-none"
     ></div>
-  </div>
-  
 
     <script>
       // Add this right after Firebase initialization
